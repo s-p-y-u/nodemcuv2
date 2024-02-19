@@ -105,7 +105,7 @@ void relay(AsyncWebServerRequest *request)
   }
 }
 
-void status(AsyncWebServerRequest *request)
+void get__html(AsyncWebServerRequest *request)
 {
   String pins__info = "{";
   for (struct pins *p = relay__pin; p < relay__pin + pins__count; p++)
@@ -150,11 +150,24 @@ void status(AsyncWebServerRequest *request)
   pins__info += "}";
   request->send(200, "text/html", String(pins__info));
 }
+
 void get__info_pin(AsyncWebServerRequest *request)
 {
-  Serial.printf("{name=%s, pin=%d, mode=%d, status=%d}", relay__pin[0].pin__name, relay__pin[0].pin,
-                relay__pin[0].pin__mode, relay__pin[0].pin__status);
-  request->send(200, "text/html", String(digitalRead(relay__pin[0].pin)));
+  String res = "{";
+  for (byte i = 0; i < pins__count; i++)
+  {
+    res += '"';
+    res += relay__pin[i].pin__name;
+    res += '"';
+    res += ':';
+    res += relay__pin[i].pin__status;
+    if (i != pins__count - 1)
+    {
+      res += ',';
+    }
+  }
+  res += "}";
+  request->send(200, "text/html", String(res));
 }
 
 void setup()
@@ -212,7 +225,7 @@ void setup()
   //             request->send(200, "text/plain", String(result)); });
 
   server.on("/relay", HTTP_GET, relay);
-  server.on("/status", HTTP_GET, status);
+  server.on("/get__html", HTTP_GET, get__html);
   server.on("/get__info_pin", HTTP_GET, get__info_pin);
 
   // Handle Web Server Events
